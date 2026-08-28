@@ -4,7 +4,7 @@ import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOu
 import {getFirestore,doc,getDoc,setDoc,collection,query,orderBy,limit,onSnapshot,serverTimestamp,deleteDoc,addDoc} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 import {getStorage,ref as sref,uploadBytes,getDownloadURL,deleteObject} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-storage.js";
 const $=id=>document.getElementById(id), app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),storage=getStorage(app);
-let selected="",studentName="",posts=[],cur=null,photos=[],teacherMode=false,unsub=null,cunsub=null;
+let selected="",studentName="",posts=[],cur=null,photos=[],teacherPhotos=[],teacherMode=false,unsub=null,cunsub=null;
 const views=["landing","login","board","teacher"];
 function view(id){views.forEach(v=>$(v).classList.toggle("hidden",v!==id));scrollTo(0,0)}
 function toast(s){$("toast").textContent=s;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),1800)}
@@ -54,12 +54,21 @@ $("chooseLogin").onclick=()=>setAuthMode("login");
 $("backMode").onclick=()=>{$("passwordPanel").classList.add("hidden");$("modeChoice").classList.remove("hidden");$("authMsg").textContent="";};
 $("backNames").onclick=()=>{$("nameGrid").classList.remove("hidden");$("authPanel").classList.add("hidden");$("backRules").classList.remove("hidden")};
 
+
+async function getStudentEmail(name){
+  try{
+    const s=await getDoc(doc(db,"student_login_aliases",name));
+    if(s.exists() && s.data().email) return s.data().email;
+  }catch(e){console.warn("alias lookup",e)}
+  return APP_CONFIG.studentEmails[name];
+}
+
 async function registerStudent(){
   if(!openNow())return toast("현재는 운영시간이 아니에요.");
   const p=$("pw").value,p2=$("pw2").value;if(p.length<6)return $("authMsg").textContent="비밀번호는 6자 이상으로 만들어 주세요.";if(p!==p2)return $("authMsg").textContent="비밀번호가 서로 달라요.";
   try{
     const accountRef=doc(db,"student_accounts",selected);
-    const email=APP_CONFIG.studentEmails[selected],cred=await createUserWithEmailAndPassword(auth,email,p);
+    const email=await getStudentEmail(selected),cred=await createUserWithEmailAndPassword(auth,email,p);
     try{
       await setDoc(accountRef,{name:selected,email,uid:cred.user.uid,createdAt:serverTimestamp()});
     }catch(err){
@@ -70,7 +79,7 @@ async function registerStudent(){
   }catch(e){console.error(e);$("authMsg").textContent=e.code==="auth/email-already-in-use"?"이미 이 이름으로 가입되어 있어요. ‘이미 비밀번호를 만들었어요 · 로그인’을 눌러 주세요.":"계정을 만들지 못했어요. 다시 확인해 주세요."}
 }
 async function loginStudent(){
-  try{const cred=await signInWithEmailAndPassword(auth,APP_CONFIG.studentEmails[selected],$("pw").value);const a=await getDoc(doc(db,"student_accounts",selected));if(!a.exists()||a.data().uid!==cred.user.uid)throw new Error("profile mismatch");studentName=selected;enterBoard()}catch(e){console.error(e);$("authMsg").textContent="비밀번호가 맞지 않아요."}
+  try{const email=await getStudentEmail(selected);const cred=await signInWithEmailAndPassword(auth,email,$("pw").value);const a=await getDoc(doc(db,"student_accounts",selected));if(!a.exists()||a.data().uid!==cred.user.uid)throw new Error("profile mismatch");studentName=selected;enterBoard()}catch(e){console.error(e);$("authMsg").textContent="비밀번호가 맞지 않아요."}
 }
 function enterBoard(){if(!openNow())return view("landing");teacherMode=false;$("who").textContent=studentName;view("board");listenPosts()}
 $("logout").onclick=async()=>{await signOut(auth);studentName="";view("landing")};
@@ -91,13 +100,52 @@ $("submit").onclick=async()=>{
   catch(e){console.error(e);toast("게시하지 못했어요.")}finally{$("submit").disabled=false}
 }
 async function delPost(id){if(!confirm("이 글과 사진을 삭제할까요?"))return;const p=posts.find(x=>x.id===id);try{await deleteDoc(doc(db,"posts",id));for(const path of p.imagePaths||[]){try{await deleteObject(sref(storage,path))}catch{}}toast("삭제했어요.")}catch(e){console.error(e);toast("삭제하지 못했어요.")}}
-async function openPost(id){cur=posts.find(x=>x.id===id);if(!cur)return;$("detail").innerHTML=`<div class="meta">${esc(cur.authorName)}</div><h2>${esc(cur.title)}</h2><div style="white-space:pre-wrap">${esc(cur.content)}</div>${(cur.imageUrls||[]).map(u=>`<img class="dimg" src="${esc(u)}">`).join("")}`;$("dlg").showModal();if(cunsub)cunsub();cunsub=onSnapshot(query(collection(db,"posts",id,"comments"),orderBy("createdAt","asc"),limit(100)),s=>{$("comments").innerHTML=s.docs.map(d=>{const c=d.data();return`<div class="commentbox"><div class="commenthead">${esc(c.authorName)}</div><div>${esc(c.content)}</div></div>`}).join("")});$("comment").classList.toggle("hidden",teacherMode);$("sendComment").classList.toggle("hidden",teacherMode)}
-$("closeDlg").onclick=()=>$("dlg").close();$("sendComment").onclick=async()=>{const c=$("comment").value.trim();if(c.length<2)return;await addDoc(collection(db,"posts",cur.id,"comments"),{content:c,authorName:studentName,authorUid:auth.currentUser.uid,createdAt:serverTimestamp()});$("comment").value=""};
+async function openPost(id){cur=posts.find(x=>x.id===id);if(!cur)return;$("detail").innerHTML=`<div class="meta">${esc(cur.authorName)}</div><h2>${esc(cur.title)}</h2><div style="white-space:pre-wrap">${esc(cur.content)}</div>${(cur.imageUrls||[]).map(u=>`<img class="dimg" src="${esc(u)}">`).join("")}`;$("dlg").showModal();if(cunsub)cunsub();cunsub=onSnapshot(query(collection(db,"posts",id,"comments"),orderBy("createdAt","asc"),limit(100)),s=>{$("comments").innerHTML=s.docs.map(d=>{const c=d.data();return`<div class="commentbox"><div class="commenthead">${esc(c.authorName)}</div><div>${esc(c.content)}</div></div>`}).join("")});$("comment").classList.remove("hidden");$("sendComment").classList.remove("hidden")}
+$("closeDlg").onclick=()=>$("dlg").close();$("sendComment").onclick=async()=>{const c=$("comment").value.trim();if(c.length<2)return;const name=teacherMode?"최현진 선생님":studentName;await addDoc(collection(db,"posts",cur.id,"comments"),{content:c,authorName:name,authorUid:auth.currentUser.uid,createdAt:serverTimestamp()});$("comment").value="";toast("댓글을 등록했어요!")};
 
 $("teacherBtn").onclick=()=>view("teacher");
 $("tlogin").onclick=async()=>{try{const c=await signInWithEmailAndPassword(auth,$("te").value.trim(),$("tp").value);if(c.user.uid!==APP_CONFIG.teacherUid){await signOut(auth);throw 0}teacherMode=true;$("teacher").querySelector(".narrow").classList.add("hidden");$("tdash").classList.remove("hidden");await renderStatus();listenPosts()}catch(e){$("tmsg").textContent="교사용 로그인 정보를 확인해 주세요."}};
-async function renderStatus(){let html="";for(const n of APP_CONFIG.students){const s=await getDoc(doc(db,"student_accounts",n));html+=`<div class="st ${s.exists()?"yes":""}">${n}<br><small>${s.exists()?"가입 완료":"미가입"}</small></div>`}$("status").innerHTML=html}
+async function renderStatus(){
+  let html="";
+  for(const n of APP_CONFIG.students){
+    const s=await getDoc(doc(db,"student_accounts",n));
+    html+=`<div class="st ${s.exists()?"yes":""}">
+      ${n}<br><small>${s.exists()?"가입 완료":"미가입"}</small>
+      ${s.exists()?`<br><button class="mini danger reset-account" data-name="${n}">비밀번호 초기화</button>`:""}
+    </div>`;
+  }
+  $("status").innerHTML=html;
+  document.querySelectorAll(".reset-account").forEach(b=>b.onclick=()=>resetStudentAccount(b.dataset.name));
+}
+
+async function resetStudentAccount(name){
+  if(!teacherMode || auth.currentUser?.uid!==APP_CONFIG.teacherUid) return;
+  if(!confirm(`${name} 학생의 비밀번호를 초기화할까요?\n초기화 후 학생은 새 비밀번호를 다시 만들 수 있습니다.`)) return;
+  try{
+    const aliasRef=doc(db,"student_login_aliases",name);
+    const snap=await getDoc(aliasRef);
+    const nextVersion=(snap.exists() && Number(snap.data().version)) ? Number(snap.data().version)+1 : 2;
+    const base=APP_CONFIG.studentEmails[name].split("@")[0];
+    const email=`${base}-r${nextVersion}@nancho.invalid`;
+    await setDoc(aliasRef,{name,version:nextVersion,email,updatedAt:serverTimestamp()});
+    await deleteDoc(doc(db,"student_accounts",name));
+    toast(`${name} 학생 계정을 초기화했어요.`);
+    await renderStatus();
+  }catch(e){
+    console.error(e);
+    alert("초기화하지 못했습니다. Firestore 규칙을 확인해 주세요.");
+  }
+}
+
 function renderTeacherPosts(){$("tposts").innerHTML=posts.map(p=>`<div class="post" data-id="${p.id}"><div class="meta">${esc(p.authorName)}</div><div class="ptitle">${esc(p.title)}</div><div>${esc(p.content).slice(0,120)}</div><button class="mini danger tdel" data-id="${p.id}">삭제</button></div>`).join("");document.querySelectorAll("#tposts .post").forEach(e=>e.onclick=ev=>{if(ev.target.closest("button"))return;openPost(e.dataset.id)});document.querySelectorAll(".tdel").forEach(b=>b.onclick=()=>delPost(b.dataset.id))}
+
+
+$("teacherPhotos").onchange=()=>{
+  teacherPhotos=Array.from($("teacherPhotos").files||[])
+    .filter(f=>f.type.startsWith("image/")&&f.size<=APP_CONFIG.maxPhotoBytes)
+    .slice(0,3);
+  $("teacherPreviews").innerHTML=teacherPhotos.map(f=>`<img src="${URL.createObjectURL(f)}">`).join("");
+};
 
 $("teacherPostSubmit").onclick=async()=>{
   const title=$("teacherPostTitle").value.trim();
@@ -110,23 +158,37 @@ $("teacherPostSubmit").onclick=async()=>{
     return $("teacherPostMsg").textContent="제목과 내용을 입력해 주세요.";
   }
   $("teacherPostSubmit").disabled=true;
+  const paths=[],urls=[];
   try{
-    await addDoc(collection(db,"posts"),{
+    const postRef=doc(collection(db,"posts"));
+    for(let i=0;i<teacherPhotos.length;i++){
+      const f=teacherPhotos[i];
+      const path=`post-images/${auth.currentUser.uid}/${postRef.id}/${Date.now()}_${i}_${f.name.replace(/[^a-zA-Z0-9._-]/g,"_")}`;
+      paths.push(path);
+      $("teacherPostMsg").textContent=`사진 업로드 중 ${i+1}/${teacherPhotos.length}`;
+      const sr=sref(storage,path);
+      await uploadBytes(sr,f,{contentType:f.type});
+      urls.push(await getDownloadURL(sr));
+    }
+    await setDoc(postRef,{
       title:title.slice(0,50),
       content:content.slice(0,1500),
       authorName:"최현진 선생님",
       authorUid:auth.currentUser.uid,
-      imageUrls:[],
-      imagePaths:[],
+      imageUrls:urls,
+      imagePaths:paths,
       createdAt:serverTimestamp()
     });
     $("teacherPostTitle").value="";
     $("teacherPostContent").value="";
+    $("teacherPhotos").value="";
+    $("teacherPreviews").innerHTML="";
+    teacherPhotos=[];
     $("teacherPostMsg").textContent="게시했습니다.";
     toast("선생님 글을 게시했어요!");
   }catch(e){
     console.error(e);
-    $("teacherPostMsg").textContent="게시하지 못했습니다. Firestore 규칙을 확인해 주세요.";
+    $("teacherPostMsg").textContent="게시하지 못했습니다. Firebase 규칙을 확인해 주세요.";
   }finally{
     $("teacherPostSubmit").disabled=false;
   }

@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>난초반 주말 누리집</title><link rel="stylesheet" href="./style.css?v=2">
+<title>난초반 주말 누리집</title><link rel="stylesheet" href="./style.css?v=4">
 </head>
 <body>
 <header><div><small>5학년 난초반 · 국어</small><h1>🌼 난초반 주말 누리집</h1></div><button id="teacherBtn">선생님</button></header>
@@ -118,10 +118,14 @@
       <h3>📢 선생님 글쓰기</h3>
       <input id="teacherPostTitle" maxlength="50" placeholder="제목">
       <textarea id="teacherPostContent" maxlength="1500" rows="6" placeholder="아이들에게 보여줄 글을 작성해 주세요."></textarea>
+      <label class="photo">📷 사진 선택 (최대 3장)
+        <input id="teacherPhotos" type="file" accept="image/*" multiple>
+      </label>
+      <div id="teacherPreviews" class="previews"></div>
       <button id="teacherPostSubmit" class="primary">선생님 이름으로 게시하기</button>
       <p id="teacherPostMsg" class="muted"></p>
     </div>
-    <div class="card"><h3>학생 가입 현황</h3><div id="status" class="status"></div></div>
+    <div class="card"><h3>학생 가입 현황 · 비밀번호 초기화</h3><p class="muted">초기화하면 해당 학생은 다시 ‘처음이에요’에서 새 비밀번호를 만들 수 있어요.</p><div id="status" class="status"></div></div>
     <div class="card"><h3>전체 게시글</h3><div id="tposts"></div></div>
   </div>
 </section>
@@ -129,5 +133,5 @@
 
 <dialog id="dlg"><button id="closeDlg" class="x">×</button><div id="detail"></div><div id="comments"></div><textarea id="comment" rows="3" placeholder="예의 바른 댓글을 남겨 주세요."></textarea><button id="sendComment" class="primary">댓글 등록</button></dialog>
 <div id="toast"></div>
-<script type="module" src="./app.js?v=3"></script>
+<script type="module" src="./app.js?v=4"></script>
 </body></html>
