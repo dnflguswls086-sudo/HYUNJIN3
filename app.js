@@ -17,8 +17,9 @@ $("rules").addEventListener("scroll",()=>{const e=$("rules");if(e.scrollTop+e.cl
 $("agree1").onchange=updateGo;$("agree2").onchange=updateGo;$("goLogin").onclick=()=>{view("login");renderNames();};$("backRules").onclick=()=>view("landing");
 
 function renderNames(){
-  $("nameGrid").innerHTML=APP_CONFIG.students.map(n=>`<button class="namebtn" data-n="${n}">${n}</button>`).join("");
-  document.querySelectorAll(".namebtn").forEach(b=>b.onclick=()=>choose(b.dataset.n))
+  document.querySelectorAll(".namebtn").forEach(b=>{
+    b.onclick=()=>choose(b.dataset.n);
+  });
 }
 function choose(n){
   selected=n;
@@ -97,5 +98,39 @@ $("teacherBtn").onclick=()=>view("teacher");
 $("tlogin").onclick=async()=>{try{const c=await signInWithEmailAndPassword(auth,$("te").value.trim(),$("tp").value);if(c.user.uid!==APP_CONFIG.teacherUid){await signOut(auth);throw 0}teacherMode=true;$("teacher").querySelector(".narrow").classList.add("hidden");$("tdash").classList.remove("hidden");await renderStatus();listenPosts()}catch(e){$("tmsg").textContent="교사용 로그인 정보를 확인해 주세요."}};
 async function renderStatus(){let html="";for(const n of APP_CONFIG.students){const s=await getDoc(doc(db,"student_accounts",n));html+=`<div class="st ${s.exists()?"yes":""}">${n}<br><small>${s.exists()?"가입 완료":"미가입"}</small></div>`}$("status").innerHTML=html}
 function renderTeacherPosts(){$("tposts").innerHTML=posts.map(p=>`<div class="post" data-id="${p.id}"><div class="meta">${esc(p.authorName)}</div><div class="ptitle">${esc(p.title)}</div><div>${esc(p.content).slice(0,120)}</div><button class="mini danger tdel" data-id="${p.id}">삭제</button></div>`).join("");document.querySelectorAll("#tposts .post").forEach(e=>e.onclick=ev=>{if(ev.target.closest("button"))return;openPost(e.dataset.id)});document.querySelectorAll(".tdel").forEach(b=>b.onclick=()=>delPost(b.dataset.id))}
+
+$("teacherPostSubmit").onclick=async()=>{
+  const title=$("teacherPostTitle").value.trim();
+  const content=$("teacherPostContent").value.trim();
+  $("teacherPostMsg").textContent="";
+  if(!teacherMode || !auth.currentUser || auth.currentUser.uid!==APP_CONFIG.teacherUid){
+    return $("teacherPostMsg").textContent="교사용 계정으로 로그인해 주세요.";
+  }
+  if(title.length<2 || content.length<2){
+    return $("teacherPostMsg").textContent="제목과 내용을 입력해 주세요.";
+  }
+  $("teacherPostSubmit").disabled=true;
+  try{
+    await addDoc(collection(db,"posts"),{
+      title:title.slice(0,50),
+      content:content.slice(0,1500),
+      authorName:"최현진 선생님",
+      authorUid:auth.currentUser.uid,
+      imageUrls:[],
+      imagePaths:[],
+      createdAt:serverTimestamp()
+    });
+    $("teacherPostTitle").value="";
+    $("teacherPostContent").value="";
+    $("teacherPostMsg").textContent="게시했습니다.";
+    toast("선생님 글을 게시했어요!");
+  }catch(e){
+    console.error(e);
+    $("teacherPostMsg").textContent="게시하지 못했습니다. Firestore 규칙을 확인해 주세요.";
+  }finally{
+    $("teacherPostSubmit").disabled=false;
+  }
+};
+
 $("tout").onclick=async()=>{await signOut(auth);teacherMode=false;$("tdash").classList.add("hidden");$("teacher").querySelector(".narrow").classList.remove("hidden");view("landing")};
-openUI();setInterval(openUI,1000);onAuthStateChanged(auth,()=>{});
+renderNames();openUI();setInterval(openUI,1000);onAuthStateChanged(auth,()=>{});

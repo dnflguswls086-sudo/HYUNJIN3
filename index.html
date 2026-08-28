@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>난초반 주말 누리집</title><link rel="stylesheet" href="./style.css">
+<title>난초반 주말 누리집</title><link rel="stylesheet" href="./style.css?v=2">
 </head>
 <body>
 <header><div><small>5학년 난초반 · 국어</small><h1>🌼 난초반 주말 누리집</h1></div><button id="teacherBtn">선생님</button></header>
@@ -39,7 +39,33 @@
   <div class="card narrow">
     <span class="badge">학생 로그인</span>
     <h2>내 이름을 선택해 주세요.</h2>
-    <div id="nameGrid" class="names"></div>
+    <div class="versionmark">✅ 수정본 V2 · 이름 목록 직접 표시 방식</div>
+<div id="nameGrid" class="names">
+<button class="namebtn" data-n="강승효">강승효</button>
+<button class="namebtn" data-n="김동윤">김동윤</button>
+<button class="namebtn" data-n="김주원">김주원</button>
+<button class="namebtn" data-n="양지완">양지완</button>
+<button class="namebtn" data-n="이서준">이서준</button>
+<button class="namebtn" data-n="이영현">이영현</button>
+<button class="namebtn" data-n="이이안">이이안</button>
+<button class="namebtn" data-n="이지환">이지환</button>
+<button class="namebtn" data-n="이호진">이호진</button>
+<button class="namebtn" data-n="정민준">정민준</button>
+<button class="namebtn" data-n="정윤후">정윤후</button>
+<button class="namebtn" data-n="하이준">하이준</button>
+<button class="namebtn" data-n="고서진">고서진</button>
+<button class="namebtn" data-n="김리재">김리재</button>
+<button class="namebtn" data-n="박나윤">박나윤</button>
+<button class="namebtn" data-n="박서은">박서은</button>
+<button class="namebtn" data-n="송윤하">송윤하</button>
+<button class="namebtn" data-n="이가빈">이가빈</button>
+<button class="namebtn" data-n="임엘린">임엘린</button>
+<button class="namebtn" data-n="정단우">정단우</button>
+<button class="namebtn" data-n="정이현">정이현</button>
+<button class="namebtn" data-n="조서윤">조서윤</button>
+<button class="namebtn" data-n="최인아">최인아</button>
+<button class="namebtn" data-n="김나현">김나현</button>
+</div>
     <div id="authPanel" class="hidden">
       <h3 id="authTitle"></h3>
       <p class="muted">본인의 이름이 맞는지 확인해 주세요.</p>
@@ -88,6 +114,13 @@
   </div>
   <div id="tdash" class="hidden">
     <div class="boardhead"><h2>선생님 관리 화면</h2><button id="tout" class="ghost">나가기</button></div>
+    <div class="card">
+      <h3>📢 선생님 글쓰기</h3>
+      <input id="teacherPostTitle" maxlength="50" placeholder="제목">
+      <textarea id="teacherPostContent" maxlength="1500" rows="6" placeholder="아이들에게 보여줄 글을 작성해 주세요."></textarea>
+      <button id="teacherPostSubmit" class="primary">선생님 이름으로 게시하기</button>
+      <p id="teacherPostMsg" class="muted"></p>
+    </div>
     <div class="card"><h3>학생 가입 현황</h3><div id="status" class="status"></div></div>
     <div class="card"><h3>전체 게시글</h3><div id="tposts"></div></div>
   </div>
@@ -96,5 +129,5 @@
 
 <dialog id="dlg"><button id="closeDlg" class="x">×</button><div id="detail"></div><div id="comments"></div><textarea id="comment" rows="3" placeholder="예의 바른 댓글을 남겨 주세요."></textarea><button id="sendComment" class="primary">댓글 등록</button></dialog>
 <div id="toast"></div>
-<script type="module" src="./app.js"></script>
+<script type="module" src="./app.js?v=3"></script>
 </body></html>
