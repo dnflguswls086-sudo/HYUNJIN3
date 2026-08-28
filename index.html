@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>난초반 주말 누리집</title><link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<header><div><small>5학년 난초반 · 국어</small><h1>🌼 난초반 주말 누리집</h1></div><button id="teacherBtn">선생님</button></header>
+<main>
+<section id="landing">
+  <div class="hero">
+    <span class="badge">국어 수업용 임시 운영</span>
+    <h2>친구의 글을 읽고 예의 바르게 생각을 나누어요.</h2>
+    <div class="hours">금 11:00~20:00 · 토/일 09:00~20:00</div>
+    <div id="closed" class="closed hidden"></div>
+  </div>
+  <div class="card">
+    <h2>🚨 꼭 읽어 주세요!</h2>
+    <div id="rules" class="rules">
+      <p><b>1. 친구를 존중하는 말을 사용합니다.</b><br>친구를 놀리거나 기분 나쁘게 하는 글과 댓글은 작성하지 않습니다.</p>
+      <p><b>2. 언어 예절을 지킵니다.</b><br><strong>학교 누리집은 채팅방이 아닙니다.</strong> ‘ㅋㅋㅋ’, ‘ㅎㅎㅎ’ 같은 표현을 지나치게 사용하거나 너무 편한 말투·비속어·줄임말을 사용하지 않습니다.</p>
+      <p><b>3. 욕설·비속어·도배를 하지 않습니다.</b></p>
+      <p><b>4. 개인정보를 올리지 않습니다.</b><br>전화번호, 주소, 학원, 계정 정보 등을 작성하지 않습니다.</p>
+      <p><b>5. 사진은 수업에 필요한 사진만 올립니다.</b><br>다른 사람의 얼굴, 이름표, 주소, 차량번호 등이 보이는 사진은 올리지 않습니다. 친구가 나온 사진은 허락 없이 올리지 않습니다.</p>
+      <p><b>6. 친구의 글·댓글·사진을 외부에 공유하지 않습니다.</b></p>
+      <p><b>7. 반드시 자신의 이름으로 활동합니다.</b><br><strong>다른 친구의 이름으로 먼저 계정을 만드는 행동은 절대 하지 않습니다.</strong></p>
+      <p><b>8. 국어 수업과 관련된 내용만 작성합니다.</b></p>
+      <div class="consentbox"><b>🏫 수업 자료 활용 안내</b><br>이 누리집에 작성한 <b>글·댓글·첨부 사진은 난초반 국어 수업에서 친구들과 함께 읽고 이야기하는 수업 자료로 활용될 수 있습니다.</b><br><small>학급 국어 수업용이며 외부 공개 동의가 아닙니다.</small></div>
+      <div class="warn"><b>⚠️ 선생님은 모든 글·댓글·첨부 사진을 확인할 수 있습니다.</b><br>규칙을 지키지 않은 내용은 삭제될 수 있습니다.</div>
+      <div class="end">여기까지 모두 읽었어요! 🌼</div>
+    </div>
+    <label class="agree disabled" id="a1"><input id="agree1" type="checkbox" disabled> 사용 약속을 모두 읽었으며 지키겠습니다.</label>
+    <label class="agree disabled" id="a2"><input id="agree2" type="checkbox" disabled> 내가 작성한 글·댓글·사진이 난초반 국어 수업 자료로 활용될 수 있음에 동의합니다.</label>
+    <button id="goLogin" class="primary" disabled>동의하고 로그인하기</button>
+  </div>
+</section>
+
+<section id="login" class="hidden">
+  <div class="card narrow">
+    <span class="badge">학생 로그인</span>
+    <h2>내 이름을 선택해 주세요.</h2>
+    <div id="nameGrid" class="names"></div>
+    <div id="authPanel" class="hidden">
+      <h3 id="authTitle"></h3>
+      <p id="authGuide" class="muted"></p>
+      <input id="pw" type="password" placeholder="비밀번호 (6자 이상)">
+      <input id="pw2" class="hidden" type="password" placeholder="비밀번호 다시 입력">
+      <button id="authAction" class="primary"></button>
+      <button id="backNames" class="ghost">다른 이름 선택</button>
+      <p id="authMsg" class="error"></p>
+    </div>
+    <button id="backRules" class="ghost">주의사항 다시 보기</button>
+  </div>
+</section>
+
+<section id="board" class="hidden">
+  <div class="boardhead"><div><small>난초반 주말 누리집</small><h2><span id="who"></span>님, 반가워요 🌼</h2></div><button id="logout" class="ghost">로그아웃</button></div>
+  <div class="layout">
+    <div class="card">
+      <h3>새 글 쓰기</h3>
+      <input id="title" maxlength="50" placeholder="제목">
+      <textarea id="content" maxlength="1500" rows="9" placeholder="친구들이 읽기 쉽도록 바른 문장으로 써 주세요."></textarea>
+      <label class="photo">📷 사진 선택 (최대 3장)<input id="photos" type="file" accept="image/*" multiple></label>
+      <div id="previews" class="previews"></div>
+      <button id="submit" class="primary">게시하기</button>
+      <p id="uploadMsg" class="muted"></p>
+    </div>
+    <div class="card"><div class="row"><h3>우리 반 게시판</h3><span id="count"></span></div><div id="posts"></div></div>
+  </div>
+</section>
+
+<section id="teacher" class="hidden">
+  <div class="card narrow">
+    <h2>선생님 로그인</h2>
+    <input id="te" type="email" placeholder="교사용 이메일"><input id="tp" type="password" placeholder="비밀번호">
+    <button id="tlogin" class="primary">로그인</button><p id="tmsg" class="error"></p>
+  </div>
+  <div id="tdash" class="hidden">
+    <div class="boardhead"><h2>선생님 관리 화면</h2><button id="tout" class="ghost">나가기</button></div>
+    <div class="card"><h3>학생 가입 현황</h3><div id="status" class="status"></div></div>
+    <div class="card"><h3>전체 게시글</h3><div id="tposts"></div></div>
+  </div>
+</section>
+</main>
+
+<dialog id="dlg"><button id="closeDlg" class="x">×</button><div id="detail"></div><div id="comments"></div><textarea id="comment" rows="3" placeholder="예의 바른 댓글을 남겨 주세요."></textarea><button id="sendComment" class="primary">댓글 등록</button></dialog>
+<div id="toast"></div>
+<script type="module" src="./app.js"></script>
+</body></html>
