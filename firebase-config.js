@@ -12,7 +12,7 @@ export const APP_CONFIG = {
   title: "난초반 주말 누리집",
   timezone: "Asia/Seoul",
   openSchedule: {
-    "2026-08-28": { start: 11, end: 20, label: "8월 28일(금) 오전 11시 ~ 오후 8시" },
+    "2026-08-28": { start: 11, end: 23, label: "8월 28일(금) 오전 11시 ~ 오후 11시" },
     "2026-08-29": { start: 9,  end: 20, label: "8월 29일(토) 오전 9시 ~ 오후 8시" },
     "2026-08-30": { start: 9,  end: 20, label: "8월 30일(일) 오전 9시 ~ 오후 8시" }
   },
