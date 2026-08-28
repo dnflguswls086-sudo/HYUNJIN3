@@ -4,7 +4,7 @@ import {getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOu
 import {getFirestore,doc,getDoc,setDoc,collection,query,orderBy,limit,onSnapshot,serverTimestamp,deleteDoc,addDoc} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 import {getStorage,ref as sref,uploadBytes,getDownloadURL,deleteObject} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-storage.js";
 const $=id=>document.getElementById(id), app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),storage=getStorage(app);
-let selected="",studentName="",posts=[],cur=null,photos=[],teacherMode=false,unsub=null,cunsub=null,registered=new Set();
+let selected="",studentName="",posts=[],cur=null,photos=[],teacherMode=false,unsub=null,cunsub=null;
 const views=["landing","login","board","teacher"];
 function view(id){views.forEach(v=>$(v).classList.toggle("hidden",v!==id));scrollTo(0,0)}
 function toast(s){$("toast").textContent=s;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),1800)}
@@ -14,35 +14,59 @@ function openNow(){const k=kparts(),s=APP_CONFIG.openSchedule[k.date];return !!s
 function openUI(){const o=openNow();$("closed").classList.toggle("hidden",o);if(!o)$("closed").textContent="현재는 학생 운영 시간이 아닙니다. 금요일 11:00~20:00, 토·일 09:00~20:00에 이용할 수 있어요.";updateGo();if(!o&&!$("board").classList.contains("hidden")&&!teacherMode){view("landing");toast("학생 운영시간이 종료되었어요.")}}
 function updateGo(){const ok=$("agree1").dataset.ok==="1"&&$("agree1").checked&&$("agree2").checked&&openNow();$("goLogin").disabled=!ok}
 $("rules").addEventListener("scroll",()=>{const e=$("rules");if(e.scrollTop+e.clientHeight>=e.scrollHeight-15){["agree1","agree2"].forEach(id=>{$(id).disabled=false;$(id).dataset.ok="1"});$("a1").classList.remove("disabled");$("a2").classList.remove("disabled");updateGo()}});
-$("agree1").onchange=updateGo;$("agree2").onchange=updateGo;$("goLogin").onclick=()=>{view("login");loadRegistered();};$("backRules").onclick=()=>view("landing");
+$("agree1").onchange=updateGo;$("agree2").onchange=updateGo;$("goLogin").onclick=()=>{view("login");renderNames();};$("backRules").onclick=()=>view("landing");
 
-async function loadRegistered(){
-  registered=new Set();
-  for(const n of APP_CONFIG.students){const snap=await getDoc(doc(db,"student_accounts",n));if(snap.exists())registered.add(n)}
-  renderNames();
-}
 function renderNames(){
-  $("nameGrid").innerHTML=APP_CONFIG.students.map(n=>`<button class="namebtn ${registered.has(n)?"registered":""}" data-n="${n}">${n}${registered.has(n)?" ✓":""}</button>`).join("");
+  $("nameGrid").innerHTML=APP_CONFIG.students.map(n=>`<button class="namebtn" data-n="${n}">${n}</button>`).join("");
   document.querySelectorAll(".namebtn").forEach(b=>b.onclick=()=>choose(b.dataset.n))
 }
 function choose(n){
-  selected=n;$("nameGrid").classList.add("hidden");$("authPanel").classList.remove("hidden");$("backRules").classList.add("hidden");$("authMsg").textContent="";$("pw").value="";$("pw2").value="";
-  const exists=registered.has(n);
-  $("authTitle").textContent=`${n} ${exists?"로그인":"비밀번호 만들기"}`;
-  $("authGuide").innerHTML=exists?"처음에 만든 비밀번호를 입력해 주세요.":"<b>처음 한 번만</b> 사용할 비밀번호를 직접 정해 주세요. 반드시 자기 이름으로만 계정을 만들어야 합니다.";
-  $("pw2").classList.toggle("hidden",exists);$("authAction").textContent=exists?"로그인":"내 계정 만들기";$("authAction").onclick=exists?loginStudent:registerStudent
+  selected=n;
+  $("nameGrid").classList.add("hidden");
+  $("authPanel").classList.remove("hidden");
+  $("backRules").classList.add("hidden");
+  $("modeChoice").classList.remove("hidden");
+  $("passwordPanel").classList.add("hidden");
+  $("authTitle").textContent=`${n}`;
+  $("authMsg").textContent="";
+  $("pw").value=""; $("pw2").value="";
 }
+function setAuthMode(mode){
+  $("modeChoice").classList.add("hidden");
+  $("passwordPanel").classList.remove("hidden");
+  $("authMsg").textContent="";
+  $("pw").value=""; $("pw2").value="";
+  if(mode==="register"){
+    $("authGuide").innerHTML="<b>처음 한 번만</b> 사용할 비밀번호를 직접 정해 주세요. 비밀번호는 6자 이상이어야 합니다.";
+    $("pw2").classList.remove("hidden");
+    $("authAction").textContent="내 계정 만들기";
+    $("authAction").onclick=registerStudent;
+  }else{
+    $("authGuide").textContent="처음에 만든 비밀번호를 입력해 주세요.";
+    $("pw2").classList.add("hidden");
+    $("authAction").textContent="로그인";
+    $("authAction").onclick=loginStudent;
+  }
+}
+$("chooseRegister").onclick=()=>setAuthMode("register");
+$("chooseLogin").onclick=()=>setAuthMode("login");
+$("backMode").onclick=()=>{$("passwordPanel").classList.add("hidden");$("modeChoice").classList.remove("hidden");$("authMsg").textContent="";};
 $("backNames").onclick=()=>{$("nameGrid").classList.remove("hidden");$("authPanel").classList.add("hidden");$("backRules").classList.remove("hidden")};
 
 async function registerStudent(){
   if(!openNow())return toast("현재는 운영시간이 아니에요.");
   const p=$("pw").value,p2=$("pw2").value;if(p.length<6)return $("authMsg").textContent="비밀번호는 6자 이상으로 만들어 주세요.";if(p!==p2)return $("authMsg").textContent="비밀번호가 서로 달라요.";
   try{
-    const accountRef=doc(db,"student_accounts",selected);if((await getDoc(accountRef)).exists()){registered.add(selected);choose(selected);return $("authMsg").textContent="이미 계정이 만들어진 이름이에요. 로그인해 주세요."}
+    const accountRef=doc(db,"student_accounts",selected);
     const email=APP_CONFIG.studentEmails[selected],cred=await createUserWithEmailAndPassword(auth,email,p);
-    await setDoc(accountRef,{name:selected,email,uid:cred.user.uid,createdAt:serverTimestamp()});
-    studentName=selected;registered.add(selected);toast("계정을 만들었어요!");enterBoard();
-  }catch(e){console.error(e);$("authMsg").textContent=e.code==="auth/email-already-in-use"?"이미 이 학생 계정이 만들어져 있어요. 선생님께 알려 주세요.":"계정을 만들지 못했어요. 다시 확인해 주세요."}
+    try{
+      await setDoc(accountRef,{name:selected,email,uid:cred.user.uid,createdAt:serverTimestamp()});
+    }catch(err){
+      await signOut(auth);
+      throw err;
+    }
+    studentName=selected;toast("계정을 만들었어요!");enterBoard();
+  }catch(e){console.error(e);$("authMsg").textContent=e.code==="auth/email-already-in-use"?"이미 이 이름으로 가입되어 있어요. ‘이미 비밀번호를 만들었어요 · 로그인’을 눌러 주세요.":"계정을 만들지 못했어요. 다시 확인해 주세요."}
 }
 async function loginStudent(){
   try{const cred=await signInWithEmailAndPassword(auth,APP_CONFIG.studentEmails[selected],$("pw").value);const a=await getDoc(doc(db,"student_accounts",selected));if(!a.exists()||a.data().uid!==cred.user.uid)throw new Error("profile mismatch");studentName=selected;enterBoard()}catch(e){console.error(e);$("authMsg").textContent="비밀번호가 맞지 않아요."}

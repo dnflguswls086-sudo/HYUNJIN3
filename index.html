@@ -42,11 +42,22 @@
     <div id="nameGrid" class="names"></div>
     <div id="authPanel" class="hidden">
       <h3 id="authTitle"></h3>
-      <p id="authGuide" class="muted"></p>
-      <input id="pw" type="password" placeholder="비밀번호 (6자 이상)">
-      <input id="pw2" class="hidden" type="password" placeholder="비밀번호 다시 입력">
-      <button id="authAction" class="primary"></button>
-      <button id="backNames" class="ghost">다른 이름 선택</button>
+      <p class="muted">본인의 이름이 맞는지 확인해 주세요.</p>
+
+      <div id="modeChoice">
+        <button id="chooseRegister" class="primary">처음이에요 · 비밀번호 만들기</button>
+        <button id="chooseLogin" class="ghost" style="width:100%;margin-top:8px">이미 비밀번호를 만들었어요 · 로그인</button>
+      </div>
+
+      <div id="passwordPanel" class="hidden">
+        <p id="authGuide" class="muted"></p>
+        <input id="pw" type="password" placeholder="비밀번호 (6자 이상)">
+        <input id="pw2" class="hidden" type="password" placeholder="비밀번호 다시 입력">
+        <button id="authAction" class="primary"></button>
+        <button id="backMode" class="ghost" style="width:100%;margin-top:8px">가입/로그인 선택으로 돌아가기</button>
+      </div>
+
+      <button id="backNames" class="ghost" style="margin-top:8px">다른 이름 선택</button>
       <p id="authMsg" class="error"></p>
     </div>
     <button id="backRules" class="ghost">주의사항 다시 보기</button>
